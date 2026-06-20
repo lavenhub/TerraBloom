@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TerraBloom
+
+![TerraBloom Hero](public/screenshots/hero.png)
+
+> AI sustainability platform where your daily choices shape a living 3D city. Log any activity — food, travel, energy — and Groq Vision AI estimates the carbon footprint in real time. Good choices grow trees and clear the air. Bad ones bring smog and decay.
+
+**Live →** [terrabloom-zeta.vercel.app](https://terrabloom-zeta.vercel.app)
+
+---
+
+## Features
+
+- **Carbon Log** — Upload any photo. Groq Llama 4 Vision AI identifies the activity and estimates its carbon footprint in real time
+- **Living 3D City** — A procedurally generated city with a 20-parameter rulebook. Every score point changes trees, buildings, turbines, pollution haze, lake clarity, and city size
+- **History Calendar** — Every logged activity stored day by day with impact scores
+- **Future Simulation** — Side-by-side 3D comparison of your current city vs an improved one
+- **Profile** — Lifestyle preferences, weekly goals, carbon budget tracker
+- **Auth** — Phone + OTP login, 3-step account setup
+
+## City Score Rulebook
+
+| Score | City State | Trees | Buildings | Pollution |
+|-------|-----------|-------|-----------|-----------|
+| 0–19 | Critical | 0–11 | 6–12 | 55% haze |
+| 20–39 | Struggling | 12–23 | 12–19 | 27–55% |
+| 40–59 | Neutral | 24–35 | 19–26 | 0–22% |
+| 60–79 | Growing | 36–47 | 26–33 | Clear |
+| 80–100 | Thriving | 48–60 | 33–40 | Clear + solar |
+
+## Stack
+
+- **Framework** — Next.js 16 (App Router)
+- **3D Rendering** — React Three Fiber + Three.js
+- **AI Vision** — Groq Llama 4 Scout (real-time image analysis)
+- **State** — Zustand with per-user localStorage persistence
+- **Animations** — Framer Motion + GSAP
+- **Styling** — Tailwind CSS v4
+- **Deployment** — Vercel
 
 ## Getting Started
 
-First, run the development server:
+```bash
+git clone https://github.com/lavenhub/TerraBloom
+cd TerraBloom/terrabloom
+npm install
+```
+
+Create `.env.local`:
+```env
+GROQ_API_KEY=your_groq_api_key_here
+```
+
+Get a free Groq key at [console.groq.com](https://console.groq.com)
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## OTP Login
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The app uses a hardcoded OTP for demo purposes. Use **`123456`** as the verification code for any phone number.
 
-## Learn More
+## Test the City
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Visit `/test-city` to use the interactive score slider, auto-sweep animation, and mock activity injector without going through the full login flow.
