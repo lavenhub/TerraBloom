@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Navigation from "@/components/Navigation";
+import CityTimelapse from "@/components/CityTimelapse";
 import { useTerraStore } from "@/store/useTerraStore";
 
 const City3D = dynamic(() => import("@/components/City3D"), { ssr: false });
@@ -147,6 +148,11 @@ export default function CityPage() {
                   <div style={{ fontSize: "0.7rem", fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-muted)", marginTop: 4 }}>{s.label}</div>
                 </div>
               ))}
+            </div>
+
+            {/* ── TIME-LAPSE ──────────────────────────────── */}
+            <div style={{ marginTop: 16 }}>
+              <CityTimelapse />
             </div>
           </div>
 
