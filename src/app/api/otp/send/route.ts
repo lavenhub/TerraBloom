@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { normalise, storeOtp } from "@/lib/otpStore";
+import { normalise, storeOtp, checkRateLimit } from "@/lib/otpStore";
 
 /**
  * POST /api/otp/send
- *
- * Hardcoded OTP: 123456
- * No SMS, no Twilio. Just stores 123456 for any phone number.
+ * Stores a hardcoded OTP (123456) for demo purposes.
+ * Rate-limited to 3 requests per phone per 10 minutes.
  */
 
-const FIXED_OTP = "123456";
-
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
-    const body = await req.json().catch(() => null);
+    // ── Simple origin check (Security) ────────────────────────────
+    const origin = req.headers.get("origin");
+    if (process.env.NODE_ENV === "production" && origin && !origin.includes("terrabloom")) {
+      return NextResponse.json({ error: "Unauthorized origin" }, { status: 403 });
+    }
+
+    const body = await req.json().catch(() => null) as { phone?: unknown } | null;
 
     if (!body?.phone || typeof body.phone !== "string") {
       return NextResponse.json({ error: "Phone number is required." }, { status: 400 });
@@ -26,12 +29,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Always store 123456 for any phone
-    storeOtp(norm, FIXED_OTP);
+    // ── Rate limiting ─────────────────────────────────────────────
+    const rate = checkRateLimit(norm);
+    if (!rate.allowed) {
+      return NextResponse.json(
+        { error: `Too many requests. Please wait ${rate.retryAfterSec}s before trying again.` },
+        { status: 429 }
+      );
+    }
+
+    // ── Store OTP (hardcoded 123456 for demo) ─────────────────────
+    storeOtp(norm, "123456");
 
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
-    console.error("[OTP send]", err);
-    return NextResponse.json({ error: "Failed to send OTP." }, { status: 500 });
+    const message = err instanceof Error ? err.message : "Failed to send OTP.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

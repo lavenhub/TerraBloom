@@ -9,15 +9,6 @@ import { useTerraStore } from "@/store/useTerraStore";
 
 const City3D = dynamic(() => import("@/components/City3D"), { ssr: false });
 
-const METRICS = [
-  { key: "treeCount",     label: "Tree Coverage",    icon: "🌳", unit: "%" },
-  { key: "airQuality",    label: "Air Quality",       icon: "💨", unit: "%" },
-  { key: "greenness",     label: "Green Space",       icon: "🌿", unit: "%" },
-  { key: "waterClarity",  label: "Water Clarity",     icon: "💧", unit: "%" },
-  { key: "biodiversity",  label: "Biodiversity",      icon: "🦋", unit: "%" },
-  { key: "renewableEnergy", label: "Renewable Energy", icon: "⚡", unit: "%" },
-] as const;
-
 function MetricBar({ label, value, icon, unit }: { label: string; value: number; icon: string; unit: string }) {
   const color = value >= 65 ? "var(--green)" : value >= 35 ? "#86efac" : "#6b7280";
   return (
@@ -41,6 +32,12 @@ function MetricBar({ label, value, icon, unit }: { label: string; value: number;
   );
 }
 
+/**
+ * CityPage — The 3D City Dashboard
+ * 
+ * Displays the real-time 3D city based on the user's sustainability score,
+ * along with detailed metrics and an interactive timelapse.
+ */
 export default function CityPage() {
   const { cityState, activities } = useTerraStore();
 
@@ -66,7 +63,7 @@ export default function CityPage() {
   const totalCarbon = activities.reduce((s, a) => s + a.carbonEstimate, 0);
 
   return (
-    <main style={{ minHeight: "100vh", background: "var(--black)" }}>
+    <main id="main-content" style={{ minHeight: "100vh", background: "var(--black)" }}>
       <Navigation />
 
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "100px 24px 80px" }}>

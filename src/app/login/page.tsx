@@ -7,19 +7,9 @@ import Link from "next/link";
 import { useUserStore } from "@/store/useUserStore";
 import { useTerraStore } from "@/store/useTerraStore";
 import type { DietType, TransportType, EnergyType, UserProfile } from "@/store/useUserStore";
+import { initials, avatarColor } from "@/lib/utils";
 
 type Step = "phone" | "otp" | "setup";
-
-/* ── colour from name hash ────────────────────────────────────── */
-function avatarColor(name: string) {
-  const palette = ["#22c55e", "#16a34a", "#15803d", "#166534", "#14532d"];
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
-  return palette[Math.abs(h) % palette.length];
-}
-function initials(name: string) {
-  return name.trim().split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2) || "TB";
-}
 
 /* ── Step dots ────────────────────────────────────────────────── */
 function Dots({ step }: { step: Step }) {
@@ -109,6 +99,11 @@ function ErrMsg({ msg }: { msg: string }) {
 /* ════════════════════════════════════════════════════════════════
    PAGE
 ═══════════════════════════════════════════════════════════════ */
+/**
+ * LoginPage — Auth & Profile Setup
+ * 
+ * Handles the 3-step onboarding flow: Phone -> OTP -> Profile Setup.
+ */
 export default function LoginPage() {
   const router = useRouter();
   const { completeOtp, setProfile, isLoggedIn, profileComplete } = useUserStore();
@@ -239,7 +234,7 @@ export default function LoginPage() {
 
   /* ── shell ─────────────────────────────────────────────────── */
   return (
-    <div style={{ minHeight: "100vh", background: "var(--black)", display: "flex", flexDirection: "column", alignItems: "center", padding: "0 16px 60px" }}>
+    <main id="main-content" style={{ minHeight: "100vh", background: "var(--black)", display: "flex", flexDirection: "column", alignItems: "center", padding: "0 16px 60px" }}>
 
       {/* top bar */}
       <div style={{ width: "100%", maxWidth: 480, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "22px 0 0" }}>
@@ -308,9 +303,11 @@ export default function LoginPage() {
                 {loading ? "Sending…" : "Send OTP →"}
               </button>
 
-              <p style={{ textAlign: "center", fontSize: "0.73rem", color: "var(--text-muted)", marginTop: 18, lineHeight: 1.6 }} id="phone-hint">
-                Enter any phone number. Use code <strong style={{ color: "var(--green)" }}>123456</strong> to verify.
-              </p>
+              {process.env.NODE_ENV === "development" && (
+                <p style={{ textAlign: "center", fontSize: "0.73rem", color: "var(--text-muted)", marginTop: 18, lineHeight: 1.6 }} id="phone-hint">
+                  Enter any phone number. Use code <strong style={{ color: "var(--green)" }}>123456</strong> to verify.
+                </p>
+              )}
             </motion.div>
           )}
 
@@ -320,7 +317,10 @@ export default function LoginPage() {
               <p style={{ fontSize: "0.68rem", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--green)", marginBottom: 6 }}>Step 2 / 3</p>
               <h1 style={{ fontSize: "1.8rem", fontWeight: 700, color: "#fff", letterSpacing: "-0.02em", marginBottom: 8 }}>Verify Your Number</h1>
               <p style={{ fontSize: "0.9rem", color: "var(--text-dim)", lineHeight: 1.65, marginBottom: 28 }}>
-                Enter the verification code for <strong style={{ color: "#fff" }}>{fullPhone}</strong>. Use <strong style={{ color: "var(--green)" }}>123456</strong>.
+                Enter the verification code for <strong style={{ color: "#fff" }}>{fullPhone}</strong>.
+                {process.env.NODE_ENV === "development" && (
+                  <span> Use <strong style={{ color: "var(--green)" }}>123456</strong>.</span>
+                )}
               </p>
 
               {/* 6 boxes */}
@@ -491,6 +491,6 @@ export default function LoginPage() {
 
         </AnimatePresence>
       </div>
-    </div>
+    </main>
   );
 }

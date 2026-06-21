@@ -230,6 +230,11 @@ function SolarField({ x, z, rules }: { x: number; z: number; rules: CityRules })
 function Lake({ rules }: { rules: CityRules }) {
   const meshRef = useRef<THREE.Mesh>(null);
 
+  const waterColor = useMemo(
+    () => new THREE.Color().setHSL(rules.lakeClarityH, rules.lakeClarityS, rules.lakeClarityL),
+    [rules.lakeClarityH, rules.lakeClarityS, rules.lakeClarityL]
+  );
+
   useFrame((state) => {
     if (meshRef.current) {
       const mat = meshRef.current.material as THREE.MeshStandardMaterial;
@@ -240,10 +245,6 @@ function Lake({ rules }: { rules: CityRules }) {
   });
 
   if (!rules.lakePresent) return null;
-
-  const waterColor = new THREE.Color().setHSL(
-    rules.lakeClarityH, rules.lakeClarityS, rules.lakeClarityL
-  );
 
   return (
     <mesh ref={meshRef} position={[-3.5, 0.008, 3.5]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -266,6 +267,8 @@ function Lake({ rules }: { rules: CityRules }) {
 // ─────────────────────────────────────────────────────────────────────
 function PollutionHaze({ rules }: { rules: CityRules }) {
   const ref = useRef<THREE.Mesh>(null);
+
+  const hazeColor = useMemo(() => new THREE.Color(0.30, 0.26, 0.20), []);
 
   useFrame((state) => {
     if (ref.current) {
@@ -297,8 +300,14 @@ function PollutionHaze({ rules }: { rules: CityRules }) {
 // GROUND + ROADS
 // ─────────────────────────────────────────────────────────────────────
 function Ground({ rules }: { rules: CityRules }) {
-  const groundColor = new THREE.Color().setHSL(rules.groundH, rules.groundS, rules.groundL);
-  const roadColor   = new THREE.Color().setHSL(0, 0, rules.roadLightness);
+  const groundColor = useMemo(
+    () => new THREE.Color().setHSL(rules.groundH, rules.groundS, rules.groundL),
+    [rules.groundH, rules.groundS, rules.groundL]
+  );
+  const roadColor = useMemo(
+    () => new THREE.Color().setHSL(0, 0, rules.roadLightness),
+    [rules.roadLightness]
+  );
 
   const roads = [
     { rot: [-Math.PI / 2, 0, 0]           as [number,number,number], size: [0.65, 32] as [number,number] },

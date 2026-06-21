@@ -11,6 +11,18 @@ import Groq from "groq-sdk";
  * Free key:  https://console.groq.com
  */
 
+// ── Constants ─────────────────────────────────────────────────────
+const GROQ_MODEL          = "meta-llama/llama-4-scout-17b-16e-instruct" as const;
+const MAX_TOKENS          = 512;
+const TEMPERATURE         = 0.1;
+/** Max base64 imageDataUrl size: ~10 MB decoded ≈ ~13.5 MB base64 */
+const MAX_IMAGE_DATA_LEN  = 14 * 1024 * 1024;
+const VALID_MIME_TYPES    = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+const VALID_IMPACTS       = new Set(["positive", "neutral", "negative"]);
+const VALID_CATEGORIES    = new Set([
+  "Food", "Transport", "Energy", "Shopping", "Waste", "Recreation", "Home", "Other",
+]);
+
 const SYSTEM_PROMPT = `You are TerraBloom's sustainability AI. Analyze the image (and optional user note) to estimate the carbon footprint of the activity shown.
 
 Return ONLY a valid JSON object — no markdown, no explanation, nothing else:
@@ -33,8 +45,18 @@ Carbon reference values:
 
 Score guide: 0-20 very harmful | 21-40 harmful | 41-60 neutral | 61-80 good | 81-100 excellent`;
 
+// ── Types ─────────────────────────────────────────────────────────
+interface AnalysisResult {
+  category:            string;
+  impact:              string;
+  carbonEstimate:      number;
+  sustainabilityScore: number;
+  environmentalImpact: string;
+  recommendation:      string;
+}
+
 // ── Demo fallback (no API key) ────────────────────────────────────
-function demoAnalysis(note: string) {
+function demoAnalysis(note: string): AnalysisResult {
   const n = note.toLowerCase();
   if (n.includes("cycl") || n.includes("bike") || n.includes("walk"))
     return { category: "Transport", impact: "positive", carbonEstimate: 0, sustainabilityScore: 95, environmentalImpact: "Cycling and walking produce zero direct emissions and reduce road congestion.", recommendation: "Keep it up — every zero-emission trip makes a measurable difference." };
@@ -55,32 +77,79 @@ function demoAnalysis(note: string) {
   return { category: "General", impact: "neutral", carbonEstimate: 1.5, sustainabilityScore: 50, environmentalImpact: "This activity has a moderate environmental footprint. Daily choices compound into significant annual impact.", recommendation: "Track more activities to identify the highest-impact areas to improve." };
 }
 
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json().catch(() => null);
+/** Sanitise and normalise the raw Groq JSON into a validated AnalysisResult */
+function parseGroqResponse(raw: string): AnalysisResult {
+  const cleaned = raw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+  const parsed  = JSON.parse(cleaned) as Record<string, unknown>;
 
+  const category = VALID_CATEGORIES.has(String(parsed.category))
+    ? String(parsed.category)
+    : "General";
+
+  const impact = VALID_IMPACTS.has(String(parsed.impact))
+    ? String(parsed.impact)
+    : "neutral";
+
+  const carbonEstimate      = Math.max(0, parseFloat(String(parsed.carbonEstimate)) || 0);
+  const sustainabilityScore = Math.min(100, Math.max(0, parseInt(String(parsed.sustainabilityScore), 10) || 50));
+
+  return {
+    category,
+    impact,
+    carbonEstimate,
+    sustainabilityScore,
+    environmentalImpact: String(parsed.environmentalImpact || ""),
+    recommendation:      String(parsed.recommendation      || ""),
+  };
+}
+
+export async function POST(req: NextRequest): Promise<NextResponse> {
+  // Parse body once — store result to avoid re-consuming stream
+  const body = await req.json().catch(() => null) as {
+    imageDataUrl?: unknown;
+    note?: unknown;
+  } | null;
+
+  try {
     if (!body?.imageDataUrl || typeof body.imageDataUrl !== "string") {
       return NextResponse.json({ error: "imageDataUrl is required." }, { status: 400 });
     }
 
     const { imageDataUrl, note = "" } = body as { imageDataUrl: string; note: string };
 
+    // ── Validate image size ───────────────────────────────────────
+    if (imageDataUrl.length > MAX_IMAGE_DATA_LEN) {
+      return NextResponse.json({ error: "Image is too large. Maximum size is 10 MB." }, { status: 413 });
+    }
+
+    // ── Validate MIME type from data URI ──────────────────────────
+    const mimeMatch = imageDataUrl.match(/^data:([^;]+);base64,/);
+    if (!mimeMatch || !VALID_MIME_TYPES.has(mimeMatch[1])) {
+      return NextResponse.json(
+        { error: "Invalid image format. Supported: JPEG, PNG, WebP, GIF." },
+        { status: 415 }
+      );
+    }
+
+    // ── Sanitise note — strip HTML tags, limit length ─────────────
+    const sanitisedNote = String(note).replace(/<[^>]*>/g, "").trim().slice(0, 500);
+
     const apiKey = process.env.GROQ_API_KEY;
 
     // ── Demo mode ─────────────────────────────────────────────────
     if (!apiKey || apiKey === "your_groq_api_key_here") {
-      return NextResponse.json(demoAnalysis(note));
+      return NextResponse.json(demoAnalysis(sanitisedNote));
     }
 
     // ── Real Groq vision analysis ─────────────────────────────────
     const groq = new Groq({ apiKey });
 
-    const userText = note.trim()
-      ? `Analyze this image. The user described it as: "${note}". Give a carbon footprint analysis.`
+    const userText = sanitisedNote
+      ? `Analyze this image. The user described it as: "${sanitisedNote}". Give a carbon footprint analysis.`
       : "Analyze this image and provide a carbon footprint analysis of the activity shown. Be specific about what you see.";
 
     const response = await groq.chat.completions.create({
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
+      model: GROQ_MODEL,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         {
@@ -91,36 +160,24 @@ export async function POST(req: NextRequest) {
           ],
         },
       ],
-      temperature: 0.1,
-      max_tokens:  512,
+      temperature: TEMPERATURE,
+      max_tokens:  MAX_TOKENS,
     });
 
-    const raw = response.choices[0]?.message?.content?.trim() ?? "";
-
-    // Strip markdown code fences if model adds them
-    const cleaned = raw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-    const parsed  = JSON.parse(cleaned);
-
-    return NextResponse.json({
-      category:            String(parsed.category            || "General"),
-      impact:              String(parsed.impact              || "neutral"),
-      carbonEstimate:      Math.max(0, parseFloat(parsed.carbonEstimate)    || 0),
-      sustainabilityScore: Math.min(100, Math.max(0, parseInt(parsed.sustainabilityScore) || 50)),
-      environmentalImpact: String(parsed.environmentalImpact || ""),
-      recommendation:      String(parsed.recommendation      || ""),
-    });
+    const raw    = response.choices[0]?.message?.content?.trim() ?? "";
+    const result = parseGroqResponse(raw);
+    return NextResponse.json(result);
 
   } catch (err: unknown) {
-    console.error("[analyze]", err);
-    const msg = err instanceof Error ? err.message : "Analysis failed.";
-
-    // If JSON parse fails, fall back to demo using the note
+    // Use demo fallback on JSON parse failure — note was already sanitised above
     if (err instanceof SyntaxError) {
-      console.error("[analyze] JSON parse failed, using demo fallback");
-      const body = await req.json().catch(() => ({ note: "" }));
-      return NextResponse.json(demoAnalysis(body.note || ""));
+      const sanitisedNote = typeof body?.note === "string"
+        ? body.note.replace(/<[^>]*>/g, "").trim().slice(0, 500)
+        : "";
+      return NextResponse.json(demoAnalysis(sanitisedNote));
     }
 
-    return NextResponse.json({ error: msg }, { status: 500 });
+    const message = err instanceof Error ? err.message : "Analysis failed.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

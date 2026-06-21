@@ -1,13 +1,9 @@
 /**
  * useUserStore — auth state + user profile.
  *
- * Changes vs original:
- * - Added `profileComplete` flag — true only after the user finishes
- *   the setup step. Re-login skips setup only when this is true.
- * - `logout` now also resets the TerraStore via a cross-store call
- *   so city state is cleared cleanly.
- * - `completeLogin` no longer auto-creates a defaultProfile —
- *   the setup step always runs for new accounts.
+ * - profileComplete flag — false until setup step is finished
+ * - Input sanitisation on all user-supplied strings
+ * - Explicit return types on all store actions
  */
 
 import { create } from "zustand";
@@ -18,39 +14,56 @@ export type TransportType = "car" | "public" | "cycle" | "walk" | "mixed";
 export type EnergyType    = "grid" | "renewable" | "mixed";
 
 export interface UserProfile {
-  name:       string;
-  phone:      string;
-  email:      string;
-  age:        string;
-  city:       string;
-  country:    string;
-  occupation: string;
-  bio:        string;
-  diet:       DietType;
-  transport:  TransportType;
-  energy:     EnergyType;
-  weeklyGoal:   number;   // target sustainability score /100
-  carbonBudget: number;   // target kg CO₂e per week
-  avatar:     string;     // CSS color string derived from name
-  joinedAt:   string;     // ISO date
+  name:         string;
+  phone:        string;
+  email:        string;
+  age:          string;
+  city:         string;
+  country:      string;
+  occupation:   string;
+  bio:          string;
+  diet:         DietType;
+  transport:    TransportType;
+  energy:       EnergyType;
+  weeklyGoal:   number;
+  carbonBudget: number;
+  avatar:       string;
+  joinedAt:     string;
 }
 
 interface UserState {
   isLoggedIn:      boolean;
-  profileComplete: boolean;   // ← NEW: false until setup step is finished
+  profileComplete: boolean;
   phone:           string;
   profile:         UserProfile | null;
 
-  // Actions
-  setPhone:         (phone: string) => void;
-  /** Called after OTP verified — marks as logged in but profile may be incomplete */
-  completeOtp:      (phone: string) => void;
-  /** Called after setup step — saves full profile and marks profileComplete */
-  setProfile:       (profile: UserProfile) => void;
-  updateProfile:    (partial: Partial<UserProfile>) => void;
-  logout:           () => void;
+  setPhone:      (phone: string) => void;
+  completeOtp:   (phone: string) => void;
+  setProfile:    (profile: UserProfile) => void;
+  updateProfile: (partial: Partial<UserProfile>) => void;
+  logout:        () => void;
 }
 
+// ── Input sanitisation ─────────────────────────────────────────────
+/** Strip HTML tags and limit a string to `maxLen` characters. */
+function sanitise(value: string, maxLen = 200): string {
+  return value.replace(/<[^>]*>/g, "").trim().slice(0, maxLen);
+}
+
+function sanitiseProfile(profile: UserProfile): UserProfile {
+  return {
+    ...profile,
+    name:       sanitise(profile.name,       100),
+    email:      sanitise(profile.email,      254),
+    age:        sanitise(profile.age,         10),
+    city:       sanitise(profile.city,       100),
+    country:    sanitise(profile.country,    100),
+    occupation: sanitise(profile.occupation, 100),
+    bio:        sanitise(profile.bio,        500),
+  };
+}
+
+// ── Store ──────────────────────────────────────────────────────────
 export const useUserStore = create<UserState>()(
   persist(
     (set) => ({
@@ -59,31 +72,33 @@ export const useUserStore = create<UserState>()(
       phone:           "",
       profile:         null,
 
-      setPhone: (phone) => set({ phone }),
+      setPhone: (phone: string): void =>
+        set({ phone: sanitise(phone, 20) }),
 
-      completeOtp: (phone) =>
+      completeOtp: (phone: string): void =>
         set((state) => ({
-          isLoggedIn: true,
-          phone,
-          // If returning user with completed profile, keep it
+          isLoggedIn:      true,
+          phone:           sanitise(phone, 20),
           profile:         state.profile?.phone === phone ? state.profile : null,
           profileComplete: state.profile?.phone === phone ? state.profileComplete : false,
         })),
 
-      setProfile: (profile) =>
+      setProfile: (profile: UserProfile): void =>
         set({
-          profile,
+          profile:         sanitiseProfile(profile),
           profileComplete: true,
           isLoggedIn:      true,
-          phone:           profile.phone,
+          phone:           sanitise(profile.phone, 20),
         }),
 
-      updateProfile: (partial) =>
-        set((state) => ({
-          profile: state.profile ? { ...state.profile, ...partial } : null,
-        })),
+      updateProfile: (partial: Partial<UserProfile>): void =>
+        set((state) => {
+          if (!state.profile) return {};
+          const merged = { ...state.profile, ...partial };
+          return { profile: sanitiseProfile(merged) };
+        }),
 
-      logout: () =>
+      logout: (): void =>
         set({
           isLoggedIn:      false,
           profileComplete: false,

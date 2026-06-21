@@ -9,6 +9,7 @@ import { useTerraStore } from "@/store/useTerraStore";
 import { useUserStore } from "@/store/useUserStore";
 import type { Activity, ImpactLevel } from "@/store/useTerraStore";
 import { analyzeActivity } from "@/lib/gemini";
+import { scoreColor, impactColor } from "@/lib/utils";
 
 type Step = "idle" | "uploading" | "analyzing" | "result";
 
@@ -22,6 +23,12 @@ const EXAMPLE_NOTES = [
   "Booked a flight to Delhi",
 ];
 
+/**
+ * CarbonPage — Activity Upload & AI Analysis
+ * 
+ * Allows users to upload photos of activities and uses Gemini Vision
+ * to estimate the carbon impact and sustainability score.
+ */
 export default function CarbonPage() {
   const [step, setStep]                 = useState<Step>("idle");
   const [imageFile, setImageFile]       = useState<File | null>(null);
@@ -118,14 +125,9 @@ export default function CarbonPage() {
     setError(null);
   };
 
-  /* ── colours ───────────────────────────────────────────────── */
-  const scoreColor  = (s: number) => s >= 70 ? "var(--green)" : s >= 40 ? "#86efac" : "#6b7280";
-  const impactColor = (i: string) =>
-    i === "positive" ? "var(--green)" : i === "negative" ? "#f87171" : "var(--text-dim)";
-
   /* ── render ────────────────────────────────────────────────── */
   return (
-    <main style={{ minHeight: "100vh", background: "var(--black)" }}>
+    <main id="main-content" style={{ minHeight: "100vh", background: "var(--black)" }}>
       <Navigation />
 
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "100px 24px 80px" }}>

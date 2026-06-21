@@ -156,6 +156,11 @@ function ActivityRow({ activity, onDelete }: { activity: Activity; onDelete: (id
 }
 
 /* ── Main page ───────────────────────────────────────────────────── */
+/**
+ * HistoryPage — Day-by-Day Record
+ * 
+ * Displays a calendar view and list view of all logged activities.
+ */
 export default function HistoryPage() {
   const { activities, removeActivity } = useTerraStore();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -185,7 +190,7 @@ export default function HistoryPage() {
   const displayActivities = activeTab === "calendar" ? dayActivities : activities;
 
   return (
-    <main style={{ minHeight: "100vh", background: "var(--black)" }}>
+    <main id="main-content" style={{ minHeight: "100vh", background: "var(--black)" }}>
       <Navigation />
 
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "100px 24px 80px" }}>

@@ -24,6 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={geist.variable}>
       <body style={{ background: "#000", color: "#fff", minHeight: "100vh" }}>
+        <a href="#main-content" className="skip-nav">Skip to content</a>
         <ClientShell>{children}</ClientShell>
       </body>
     </html>

@@ -14,8 +14,16 @@ describe("generateCode", () => {
     expect(code).toMatch(/^\d{6}$/);
   });
 
-  it("generates different codes on successive calls", () => {
-    const codes = new Set(Array.from({ length: 20 }, () => generateCode()));
+  it("generates values in the valid 6-digit range", () => {
+    for (let i = 0; i < 20; i++) {
+      const n = parseInt(generateCode(), 10);
+      expect(n).toBeGreaterThanOrEqual(100_000);
+      expect(n).toBeLessThanOrEqual(999_999);
+    }
+  });
+
+  it("generates different codes on successive calls (not constant)", () => {
+    const codes = new Set(Array.from({ length: 30 }, () => generateCode()));
     expect(codes.size).toBeGreaterThan(1);
   });
 });
@@ -43,8 +51,7 @@ describe("storeOtp + verifyOtp", () => {
 
   it("verifies a correct code", () => {
     storeOtp(phone, "123456");
-    const result = verifyOtp(phone, "123456");
-    expect(result.ok).toBe(true);
+    expect(verifyOtp(phone, "123456").ok).toBe(true);
   });
 
   it("rejects an incorrect code", () => {
@@ -54,7 +61,7 @@ describe("storeOtp + verifyOtp", () => {
     if (!result.ok) expect(result.error).toContain("Incorrect");
   });
 
-  it("deletes OTP after successful verification", () => {
+  it("deletes OTP after successful verification (no double use)", () => {
     storeOtp(phone, "654321");
     verifyOtp(phone, "654321");
     const result = verifyOtp(phone, "654321");
@@ -76,29 +83,33 @@ describe("storeOtp + verifyOtp", () => {
     if (!result.ok) expect(result.locked).toBe(true);
   });
 
-  it("trims whitespace in code", () => {
+  it("trims whitespace from submitted code", () => {
     storeOtp(phone, "123456");
-    const result = verifyOtp(phone, "  123456  ");
-    expect(result.ok).toBe(true);
+    expect(verifyOtp(phone, "  123456  ").ok).toBe(true);
+  });
+
+  it("decrements remaining attempts correctly", () => {
+    storeOtp(phone, "111111");
+    const r1 = verifyOtp(phone, "000000");
+    expect(r1.ok).toBe(false);
+    if (!r1.ok) expect(r1.error).toContain("4 attempts remaining");
   });
 });
 
 describe("checkRateLimit", () => {
   it("allows first request", () => {
     const phone = "+919100000001";
-    const r = checkRateLimit(phone);
-    expect(r.allowed).toBe(true);
+    expect(checkRateLimit(phone).allowed).toBe(true);
   });
 
   it("allows up to 3 requests", () => {
     const phone = "+919100000002";
     checkRateLimit(phone);
     checkRateLimit(phone);
-    const third = checkRateLimit(phone);
-    expect(third.allowed).toBe(true);
+    expect(checkRateLimit(phone).allowed).toBe(true);
   });
 
-  it("blocks after 3 requests", () => {
+  it("blocks on the 4th request", () => {
     const phone = "+919100000003";
     checkRateLimit(phone);
     checkRateLimit(phone);
@@ -106,5 +117,11 @@ describe("checkRateLimit", () => {
     const fourth = checkRateLimit(phone);
     expect(fourth.allowed).toBe(false);
     expect(fourth.retryAfterSec).toBeGreaterThan(0);
+  });
+});
+
+describe("pruneExpired", () => {
+  it("runs without throwing", () => {
+    expect(() => pruneExpired()).not.toThrow();
   });
 });

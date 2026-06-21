@@ -124,7 +124,7 @@ export default function FuturePage() {
   ];
 
   return (
-    <main style={{ minHeight: "100vh", background: "var(--black)" }}>
+    <main id="main-content" style={{ minHeight: "100vh", background: "var(--black)" }}>
       <Navigation />
 
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "100px 24px 80px" }}>

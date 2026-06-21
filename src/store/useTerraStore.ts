@@ -66,10 +66,15 @@ interface TerraState {
   getCityStateForScore: (score: number) => CityState;
 }
 
-// ── Defaults ───────────────────────────────────────────────────────
+// ── Constants ──────────────────────────────────────────────────────
+/** Default starting city score before any activities are logged */
+const DEFAULT_SCORE = 55;
+/** Exponential damping factor — controls how quickly score reacts to activities */
+const DAMPING_FACTOR = 4;
+
 const DEFAULT_CITY: CityState = {
   treeCount: 50, pollutionLevel: 40, greenness: 50,
-  waterClarity: 60, biodiversity: 50, renewableEnergy: 30, overallScore: 55,
+  waterClarity: 60, biodiversity: 50, renewableEnergy: 30, overallScore: DEFAULT_SCORE,
 };
 
 function computeCity(activities: Activity[]): CityState {
@@ -104,8 +109,8 @@ function computeCity(activities: Activity[]): CityState {
    * With 3 good uploads:
    *  avg ~90: 55 + (90−55)×0.53 = 55 + 18.6 = 74               ✓ big growth
    */
-  const weight    = 1 - Math.exp(-n / 4);
-  const cityScore = Math.round(55 + (avg - 55) * weight);
+  const weight    = 1 - Math.exp(-n / DAMPING_FACTOR);
+  const cityScore = Math.round(DEFAULT_SCORE + (avg - DEFAULT_SCORE) * weight);
   const clamped   = Math.min(100, Math.max(0, cityScore));
 
   const s = clamped / 100;
@@ -176,13 +181,22 @@ export const useTerraStore = create<TerraState>()(
         set({ currentUserPhone: null, activities: [], cityState: DEFAULT_CITY, dayHistory: {} }),
 
       addActivity: (activity) => {
+        // Strip imageDataUrl before persisting — base64 images can be several MB
+        // and will quickly exhaust the ~5 MB localStorage quota.
+        const activityForStorage: Activity = { ...activity, imageDataUrl: null };
+
         set((state) => {
           const next = [activity, ...state.activities];
           const city = computeCity(next);
-          // Persist immediately under user-specific key
           if (state.currentUserPhone) {
-            const key = storageKey(state.currentUserPhone);
-            localStorage.setItem(key, JSON.stringify({ activities: next, cityState: city, dayHistory: state.dayHistory }));
+            const key          = storageKey(state.currentUserPhone);
+            const nextForStore = [activityForStorage, ...state.activities.map(
+              (a) => ({ ...a, imageDataUrl: null })
+            )];
+            localStorage.setItem(
+              key,
+              JSON.stringify({ activities: nextForStore, cityState: city, dayHistory: state.dayHistory })
+            );
           }
           return { activities: next, cityState: city };
         });
@@ -195,8 +209,12 @@ export const useTerraStore = create<TerraState>()(
           const next = state.activities.filter((a) => a.id !== id);
           const city = computeCity(next);
           if (state.currentUserPhone) {
-            const key = storageKey(state.currentUserPhone);
-            localStorage.setItem(key, JSON.stringify({ activities: next, cityState: city, dayHistory: state.dayHistory }));
+            const key          = storageKey(state.currentUserPhone);
+            const nextForStore = next.map((a) => ({ ...a, imageDataUrl: null }));
+            localStorage.setItem(
+              key,
+              JSON.stringify({ activities: nextForStore, cityState: city, dayHistory: state.dayHistory })
+            );
           }
           return { activities: next, cityState: city };
         });

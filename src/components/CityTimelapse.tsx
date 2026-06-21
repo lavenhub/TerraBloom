@@ -18,7 +18,9 @@ import type { Activity, CityState } from "@/store/useTerraStore";
 
 const City3D = dynamic(() => import("@/components/City3D"), { ssr: false });
 
+/** Playback speeds available to the user */
 const SPEEDS    = [0.5, 1, 2, 4];
+/** Base duration in milliseconds per frame at 1x speed */
 const BASE_MS   = 1800;
 
 /* ── Frame type ─────────────────────────────────────────────────── */
@@ -75,6 +77,12 @@ function buildActivityFrames(activities: Activity[]): ActivityFrame[] {
 /* ════════════════════════════════════════════════════════════════
    COMPONENT
 ═══════════════════════════════════════════════════════════════ */
+/**
+ * CityTimelapse
+ * 
+ * Interactive component that plays back the user's activities chronologically,
+ * displaying how the city evolved over time with each logged action.
+ */
 export default function CityTimelapse() {
   const { activities } = useTerraStore();
 

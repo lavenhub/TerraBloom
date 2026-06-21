@@ -260,6 +260,22 @@ video { pointer-events: none; }
 /* ── CANVAS ──────────────────────────────────────────────────────── */
 canvas { display: block; }
 
+/* ── SKIP NAV ────────────────────────────────────────────────────── */
+.skip-nav {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--green);
+  color: var(--black);
+  padding: 8px 16px;
+  z-index: 10000;
+  font-weight: 600;
+  transition: top 0.2s ease;
+}
+.skip-nav:focus {
+  top: 0;
+}
+
 /* ── FOCUS ───────────────────────────────────────────────────────── */
 :focus-visible { outline: 2px solid var(--green); outline-offset: 3px; border-radius: 4px; }
 

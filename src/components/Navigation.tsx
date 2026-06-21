@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTerraStore } from "@/store/useTerraStore";
 import { useUserStore } from "@/store/useUserStore";
+import { initials } from "@/lib/utils";
 
 const TABS = [
   { href: "/city",    label: "3D City" },
@@ -14,10 +15,10 @@ const TABS = [
   { href: "/future",  label: "Future" },
 ];
 
-function initials(name: string) {
-  return name.trim().split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2) || "TB";
-}
-
+/**
+ * Main site navigation component.
+ * Features a sticky header and mobile responsive drawer.
+ */
 export default function Navigation() {
   const pathname   = usePathname();
   const router     = useRouter();

@@ -14,7 +14,7 @@ import { useTerraStore } from "@/store/useTerraStore";
  *   e.g. http://localhost:3000/carbon?dev=1
  */
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { isLoggedIn, setProfile, profileComplete } = useUserStore();
+  const { isLoggedIn, setProfile } = useUserStore();
   const { initForUser } = useTerraStore();
   const router = useRouter();
 
