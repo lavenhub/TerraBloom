@@ -155,12 +155,16 @@ export default function CarbonPage() {
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {/* Drop zone */}
+                  {/* Drop zone — keyboard accessible */}
                   <div
+                    role="button"
+                    tabIndex={0}
+                    aria-label={imageDataUrl ? "Image uploaded. Click to replace." : "Upload activity image. Click or drag and drop."}
                     onDrop={onDrop}
                     onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                     onDragLeave={() => setDragOver(false)}
                     onClick={() => !imageDataUrl && fileInputRef.current?.click()}
+                    onKeyDown={(e) => { if ((e.key === "Enter" || e.key === " ") && !imageDataUrl) { e.preventDefault(); fileInputRef.current?.click(); } }}
                     style={{
                       border: dragOver ? "2px solid var(--green)" : "2px dashed var(--border-2)",
                       borderRadius: 14,
@@ -217,16 +221,18 @@ export default function CarbonPage() {
 
                   <input
                     ref={fileInputRef} type="file" accept="image/*"
+                    aria-label="Upload an image of your activity"
                     style={{ display: "none" }}
                     onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
                   />
 
                   {/* Note field */}
                   <div style={{ marginBottom: 14 }}>
-                    <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 7 }}>
+                    <label htmlFor="activity-note" style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 7 }}>
                       What did you do? <span style={{ color: "var(--border-2)", fontWeight: 400 }}>(optional but improves accuracy)</span>
                     </label>
                     <textarea
+                      id="activity-note"
                       className="input"
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
@@ -249,6 +255,7 @@ export default function CarbonPage() {
                   <button
                     onClick={handleAnalyze}
                     disabled={!imageFile}
+                    aria-disabled={!imageFile}
                     className="btn-primary"
                     style={{ width: "100%", padding: "14px", fontSize: "0.9375rem", opacity: imageFile ? 1 : 0.35, cursor: imageFile ? "pointer" : "not-allowed" }}
                   >

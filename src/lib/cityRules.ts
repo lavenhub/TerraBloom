@@ -160,8 +160,9 @@ export interface CityRules {
 }
 
 /** Compute all city rendering parameters from a single score value */
-export function computeRules(score: number): CityRules {
-  const s = Math.min(100, Math.max(0, score)) / 100; // 0.0 – 1.0
+export function computeRules(rawScore: number): CityRules {
+  const score = Math.min(100, Math.max(0, rawScore)); // clamp first
+  const s = score / 100; // 0.0 – 1.0
 
   return {
     score,

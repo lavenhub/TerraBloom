@@ -34,34 +34,39 @@ export default function Navigation() {
 
   useEffect(() => { setOpen(false); }, [pathname]);
 
-  const isHome = pathname === "/";
-
-  const navBg    = scrolled || !isHome ? "var(--black)"  : "transparent";
+  const isHome    = pathname === "/";
+  const navBg     = scrolled || !isHome ? "var(--black)"  : "transparent";
   const navBorder = scrolled || !isHome ? "var(--border)" : "transparent";
-
-  /* ── avatar colour from stored value ── */
-  const avatarBg   = profile?.avatar || "var(--green)";
+  const avatarBg  = profile?.avatar || "var(--green)";
   const scoreColor = cityState.overallScore >= 60 ? "var(--green)" : "#6b7280";
 
   return (
     <>
-      <header style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-        background: navBg,
-        borderBottom: `1px solid ${navBorder}`,
-        transition: "background 0.3s ease, border-color 0.3s ease",
-      }}>
+      <header
+        role="banner"
+        style={{
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
+          background: navBg,
+          borderBottom: `1px solid ${navBorder}`,
+          transition: "background 0.3s ease, border-color 0.3s ease",
+        }}
+      >
         <div style={{
           maxWidth: 1280, margin: "0 auto", padding: "0 24px",
           height: 60, display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
 
-          {/* ── Logo ── */}
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", flexShrink: 0 }}>
-            <div style={{
-              width: 28, height: 28, borderRadius: "50%", background: "var(--green)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
+          {/* Logo */}
+          <Link
+            href="/"
+            aria-label="TerraBloom — go to home"
+            style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", flexShrink: 0 }}
+          >
+            {/* Decorative logo mark */}
+            <div
+              aria-hidden="true"
+              style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--green)", display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
               <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#000" }} />
             </div>
             <span style={{ color: "#fff", fontWeight: 700, fontSize: "1.05rem", letterSpacing: "-0.01em" }}>
@@ -69,60 +74,67 @@ export default function Navigation() {
             </span>
           </Link>
 
-          {/* ── Desktop tabs ── */}
-          <nav style={{ display: "flex", alignItems: "center", gap: 2 }} className="nav-desktop">
+          {/* Desktop nav */}
+          <nav aria-label="Main navigation" style={{ display: "flex", alignItems: "center", gap: 2 }} className="nav-desktop">
             {TABS.map((tab) => {
               const active = pathname.startsWith(tab.href);
               return (
-                <Link key={tab.href} href={tab.href} style={{
-                  display: "flex", alignItems: "center", gap: 6,
-                  padding: "7px 15px", borderRadius: 6, textDecoration: "none",
-                  fontSize: "0.875rem", fontWeight: active ? 600 : 400,
-                  color: active ? "#fff" : "var(--text-dim)",
-                  background: active ? "var(--surface-3)" : "transparent",
-                  border: active ? "1px solid var(--border-2)" : "1px solid transparent",
-                  transition: "all 0.15s ease",
-                }}>
-                  <span style={{
-                    width: 5, height: 5, borderRadius: "50%", flexShrink: 0,
-                    background: active ? "var(--green)" : "transparent",
-                    transition: "background 0.15s",
-                  }} />
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  aria-current={active ? "page" : undefined}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 6,
+                    padding: "7px 15px", borderRadius: 6, textDecoration: "none",
+                    fontSize: "0.875rem", fontWeight: active ? 600 : 400,
+                    color: active ? "#fff" : "var(--text-dim)",
+                    background: active ? "var(--surface-3)" : "transparent",
+                    border: active ? "1px solid var(--border-2)" : "1px solid transparent",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  {/* Decorative dot */}
+                  <span
+                    aria-hidden="true"
+                    style={{ width: 5, height: 5, borderRadius: "50%", flexShrink: 0, background: active ? "var(--green)" : "transparent", transition: "background 0.15s" }}
+                  />
                   {tab.label}
                 </Link>
               );
             })}
           </nav>
 
-          {/* ── Right side ── */}
+          {/* Right side */}
           <div style={{ display: "flex", alignItems: "center", gap: 10 }} className="nav-desktop">
-            {/* World score chip */}
-            <div style={{
-              display: "flex", alignItems: "center", gap: 7,
-              background: "var(--surface-2)", border: "1px solid var(--border-2)",
-              borderRadius: 6, padding: "5px 12px",
-            }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: scoreColor, display: "block" }} />
+            {/* Score chip */}
+            <div
+              role="status"
+              aria-label={`World score: ${cityState.overallScore} out of 100`}
+              style={{ display: "flex", alignItems: "center", gap: 7, background: "var(--surface-2)", border: "1px solid var(--border-2)", borderRadius: 6, padding: "5px 12px" }}
+            >
+              <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: scoreColor, display: "block" }} />
               <span style={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>Score</span>
               <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff" }}>{cityState.overallScore}</span>
             </div>
 
             {/* Profile / Login */}
             {isLoggedIn && profile ? (
-              <Link href="/profile" style={{
-                display: "flex", alignItems: "center", gap: 8,
-                background: pathname === "/profile" ? "var(--surface-3)" : "var(--surface-2)",
-                border: pathname === "/profile" ? "1px solid var(--border-2)" : "1px solid var(--border)",
-                borderRadius: 8, padding: "5px 12px 5px 6px",
-                textDecoration: "none", transition: "all 0.15s ease",
-              }}>
-                {/* Mini avatar */}
-                <div style={{
-                  width: 26, height: 26, borderRadius: "50%",
-                  background: avatarBg, flexShrink: 0,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "0.65rem", fontWeight: 700, color: "#000",
-                }}>
+              <Link
+                href="/profile"
+                aria-label={`View profile for ${profile.name}`}
+                aria-current={pathname === "/profile" ? "page" : undefined}
+                style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  background: pathname === "/profile" ? "var(--surface-3)" : "var(--surface-2)",
+                  border: pathname === "/profile" ? "1px solid var(--border-2)" : "1px solid var(--border)",
+                  borderRadius: 8, padding: "5px 12px 5px 6px",
+                  textDecoration: "none", transition: "all 0.15s ease",
+                }}
+              >
+                <div
+                  aria-hidden="true"
+                  style={{ width: 26, height: 26, borderRadius: "50%", background: avatarBg, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: 700, color: "#000" }}
+                >
                   {initials(profile.name)}
                 </div>
                 <span style={{ fontSize: "0.8rem", fontWeight: 500, color: "#fff", maxWidth: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -130,68 +142,67 @@ export default function Navigation() {
                 </span>
               </Link>
             ) : (
-              <button onClick={() => router.push("/login")} className="btn-primary" style={{ padding: "6px 16px", fontSize: "0.8125rem" }}>
+              <button
+                onClick={() => router.push("/login")}
+                className="btn-primary"
+                style={{ padding: "6px 16px", fontSize: "0.8125rem" }}
+              >
                 Log In
               </button>
             )}
           </div>
 
-          {/* ── Mobile hamburger ── */}
+          {/* Mobile hamburger */}
           <button
             onClick={() => setOpen(!open)}
             className="nav-mobile"
-            aria-label="Menu"
-            style={{
-              background: "none", border: "none", cursor: "pointer",
-              display: "none", flexDirection: "column", gap: 5, padding: 4,
-            }}
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            aria-controls="mobile-menu"
+            style={{ background: "none", border: "none", cursor: "pointer", display: "none", flexDirection: "column", gap: 5, padding: 4 }}
           >
-            <span style={{ display: "block", width: 22, height: 1.5, background: "#fff", borderRadius: 1, transition: "transform 0.2s", transform: open ? "rotate(45deg) translate(4px,4px)" : "none" }} />
-            <span style={{ display: "block", width: 16, height: 1.5, background: "#fff", borderRadius: 1, transition: "opacity 0.2s", opacity: open ? 0 : 1 }} />
-            <span style={{ display: "block", width: 22, height: 1.5, background: "#fff", borderRadius: 1, transition: "transform 0.2s", transform: open ? "rotate(-45deg) translate(4px,-4px)" : "none" }} />
+            <span aria-hidden="true" style={{ display: "block", width: 22, height: 1.5, background: "#fff", borderRadius: 1, transition: "transform 0.2s", transform: open ? "rotate(45deg) translate(4px,4px)" : "none" }} />
+            <span aria-hidden="true" style={{ display: "block", width: 16, height: 1.5, background: "#fff", borderRadius: 1, transition: "opacity 0.2s", opacity: open ? 0 : 1 }} />
+            <span aria-hidden="true" style={{ display: "block", width: 22, height: 1.5, background: "#fff", borderRadius: 1, transition: "transform 0.2s", transform: open ? "rotate(-45deg) translate(4px,-4px)" : "none" }} />
           </button>
         </div>
       </header>
 
-      {/* ── Mobile drawer ── */}
+      {/* Mobile drawer */}
       <AnimatePresence>
         {open && (
           <motion.div
+            id="mobile-menu"
+            role="navigation"
+            aria-label="Mobile navigation"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            style={{
-              position: "fixed", top: 60, left: 0, right: 0, zIndex: 99,
-              background: "var(--surface-2)", borderBottom: "1px solid var(--border)",
-              padding: "8px 24px 20px",
-            }}
+            style={{ position: "fixed", top: 60, left: 0, right: 0, zIndex: 99, background: "var(--surface-2)", borderBottom: "1px solid var(--border)", padding: "8px 24px 20px" }}
           >
             {TABS.map((tab) => {
               const active = pathname.startsWith(tab.href);
               return (
-                <Link key={tab.href} href={tab.href} style={{
-                  display: "flex", alignItems: "center", gap: 10,
-                  padding: "12px 0", borderBottom: "1px solid var(--border)",
-                  textDecoration: "none", color: active ? "var(--green)" : "var(--text-dim)",
-                  fontSize: "0.9375rem", fontWeight: active ? 600 : 400,
-                }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: active ? "var(--green)" : "transparent", border: "1px solid var(--border)", flexShrink: 0 }} />
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  aria-current={active ? "page" : undefined}
+                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 0", borderBottom: "1px solid var(--border)", textDecoration: "none", color: active ? "var(--green)" : "var(--text-dim)", fontSize: "0.9375rem", fontWeight: active ? 600 : 400 }}
+                >
+                  <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: active ? "var(--green)" : "transparent", border: "1px solid var(--border)", flexShrink: 0 }} />
                   {tab.label}
                 </Link>
               );
             })}
 
-            {/* Profile row in mobile */}
             {isLoggedIn && profile ? (
-              <Link href="/profile" style={{
-                display: "flex", alignItems: "center", gap: 10,
-                padding: "14px 0", textDecoration: "none",
-                borderBottom: "1px solid var(--border)",
-                color: pathname === "/profile" ? "var(--green)" : "var(--text-dim)",
-                fontSize: "0.9375rem", fontWeight: pathname === "/profile" ? 600 : 400,
-              }}>
-                <div style={{ width: 24, height: 24, borderRadius: "50%", background: avatarBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: 700, color: "#000" }}>
+              <Link
+                href="/profile"
+                aria-current={pathname === "/profile" ? "page" : undefined}
+                style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 0", textDecoration: "none", borderBottom: "1px solid var(--border)", color: pathname === "/profile" ? "var(--green)" : "var(--text-dim)", fontSize: "0.9375rem", fontWeight: pathname === "/profile" ? 600 : 400 }}
+              >
+                <div aria-hidden="true" style={{ width: 24, height: 24, borderRadius: "50%", background: avatarBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: 700, color: "#000" }}>
                   {initials(profile.name)}
                 </div>
                 Profile — {profile.name.split(" ")[0]}
@@ -202,9 +213,8 @@ export default function Navigation() {
               </Link>
             )}
 
-            {/* Score */}
-            <div style={{ paddingTop: 14, display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: scoreColor, display: "block" }} />
+            <div aria-label={`World score: ${cityState.overallScore}`} style={{ paddingTop: 14, display: "flex", alignItems: "center", gap: 8 }}>
+              <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: scoreColor, display: "block" }} />
               <span style={{ fontSize: "0.8125rem", color: "var(--text-dim)" }}>World Score: <strong style={{ color: "#fff" }}>{cityState.overallScore}</strong></span>
             </div>
           </motion.div>

@@ -127,16 +127,19 @@ export default function HomePage() {
   const totalCarbon = Math.round(activities.reduce((s, a) => s + a.carbonEstimate, 0) * 10) / 10;
 
   return (
-    <main style={{ position: "relative", background: "transparent" }}>
+    <main role="main" style={{ position: "relative", background: "transparent" }}>
       {/* Fixed video — fills 100vh behind all sticky sections */}
       <VideoBackground />
 
       {/* Green scroll-progress line at very top */}
-      <div id="scroll-bar" style={{
-        position: "fixed", top: 0, left: 0, height: 2,
-        background: "var(--green)", zIndex: 9999,
-        width: "0%", transition: "none",
-      }} />
+      <div
+        id="scroll-bar"
+        role="progressbar"
+        aria-label="Page scroll progress"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        style={{ position: "fixed", top: 0, left: 0, height: 2, background: "var(--green)", zIndex: 9999, width: "0%", transition: "none" }}
+      />
 
       <Navigation />
 
@@ -186,6 +189,7 @@ export default function HomePage() {
 
         {/* Scroll cue — centered absolutely within the sticky section */}
         <motion.div
+          aria-hidden="true"
           animate={{ y: [0, 9, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           style={{
@@ -253,28 +257,30 @@ export default function HomePage() {
           </div>
 
           {/* Stats grid */}
-          <div className="reveal" style={{
-            opacity: 0, transform: "translateY(24px)",
-            transition: "opacity 0.7s ease 0.1s, transform 0.7s ease 0.1s",
-            display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
-            border: "1px solid var(--border)",
-            borderRadius: 16, overflow: "hidden",
-            background: "var(--surface-2)",
-          }}>
+          <div
+            className="reveal"
+            role="list"
+            aria-label="Live city statistics"
+            style={{
+              opacity: 0, transform: "translateY(24px)",
+              transition: "opacity 0.7s ease 0.1s, transform 0.7s ease 0.1s",
+              display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
+              border: "1px solid var(--border)",
+              borderRadius: 16, overflow: "hidden",
+              background: "var(--surface-2)",
+            }}
+          >
             {[
               { label: "World Score",  value: cityState.overallScore, suffix: "/100", color: "var(--green)" },
               { label: "Activities",   value: activities.length,       suffix: " logged" },
               { label: "Carbon",       value: totalCarbon,             suffix: " kg CO₂" },
               { label: "Tree Cover",   value: `${cityState.treeCount}`, suffix: "%" },
             ].map((s, i) => (
-              <div key={i} style={{
+              <div key={i} role="listitem" aria-label={`${s.label}: ${s.value}${s.suffix}`} style={{
                 padding: "36px 24px", textAlign: "center",
                 borderRight: i < 3 ? "1px solid var(--border)" : "none",
               }}>
-                <div style={{
-                  fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 700,
-                  color: s.color || "#fff", letterSpacing: "-0.03em", lineHeight: 1,
-                }}>
+                <div style={{ fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 700, color: s.color || "#fff", letterSpacing: "-0.03em", lineHeight: 1 }} aria-hidden="true">
                   {s.value}<span style={{ fontSize: "1rem", color: "var(--text-muted)", fontWeight: 400 }}>{s.suffix}</span>
                 </div>
                 <div style={{ fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-muted)", marginTop: 8 }}>
@@ -453,13 +459,15 @@ function FeatureSection({
           overflow: "hidden",
         }}>
           {/* Feature number — top left, clear of arrow */}
-          <div style={{
-            position: "absolute",
-            top: 20, left: 24,
-            fontSize: "0.7rem", fontWeight: 700,
-            letterSpacing: "0.14em", textTransform: "uppercase",
-            color: "var(--text-muted)",
-          }}>
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute", top: 20, left: 24,
+              fontSize: "0.7rem", fontWeight: 700,
+              letterSpacing: "0.14em", textTransform: "uppercase",
+              color: "var(--text-muted)",
+            }}
+          >
             {feature.number} / 04
           </div>
 
@@ -486,13 +494,16 @@ function FeatureSection({
           </p>
 
           {/* Arrow — bottom right only */}
-          <div style={{
-            position: "absolute", bottom: 20, right: 20,
-            width: 36, height: 36, borderRadius: 8,
-            background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "var(--green)", fontSize: "0.9rem",
-          }}>
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute", bottom: 20, right: 20,
+              width: 36, height: 36, borderRadius: 8,
+              background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "var(--green)", fontSize: "0.9rem",
+            }}
+          >
             →
           </div>
         </div>

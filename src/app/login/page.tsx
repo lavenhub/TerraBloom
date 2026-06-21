@@ -40,16 +40,21 @@ function Dots({ step }: { step: Step }) {
 }
 
 /* ── Labelled input ───────────────────────────────────────────── */
-function Field({ label, type = "text", value, onChange, placeholder, maxLength, autoFocus }: {
+function Field({ label, type = "text", value, onChange, placeholder, maxLength, autoFocus, id }: {
   label: string; type?: string; value: string; onChange: (v: string) => void;
-  placeholder?: string; maxLength?: number; autoFocus?: boolean;
+  placeholder?: string; maxLength?: number; autoFocus?: boolean; id?: string;
 }) {
+  const inputId = id || label.toLowerCase().replace(/[^a-z0-9]/g, "-");
   return (
     <div style={{ marginBottom: 14 }}>
-      <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 600, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 7 }}>
+      <label
+        htmlFor={inputId}
+        style={{ display: "block", fontSize: "0.72rem", fontWeight: 600, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 7 }}
+      >
         {label}
       </label>
       <input
+        id={inputId}
         type={type} value={value} onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder} maxLength={maxLength} autoFocus={autoFocus}
         className="input" style={{ fontSize: "1rem" }}
@@ -268,19 +273,30 @@ export default function LoginPage() {
                 Enter your phone number and we&apos;ll send a one-time verification code via SMS.
               </p>
 
-              <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 600, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 7 }}>
+              <label
+                htmlFor="phone-cc"
+                style={{ display: "block", fontSize: "0.72rem", fontWeight: 600, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 7 }}
+              >
                 Phone Number
               </label>
               <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-                <select value={cc} onChange={(e) => setCc(e.target.value)} className="input" style={{ width: 88, flexShrink: 0 }}>
+                <select
+                  id="phone-cc"
+                  value={cc} onChange={(e) => setCc(e.target.value)}
+                  className="input" style={{ width: 88, flexShrink: 0 }}
+                  aria-label="Country code"
+                >
                   {["+91","+1","+44","+61","+971","+65","+49","+33","+81","+86","+55","+27","+7"].map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
                 <input
+                  id="phone-number"
                   type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
                   placeholder="98765 43210" maxLength={15} autoFocus
                   className="input" style={{ flex: 1, fontSize: "1rem" }}
+                  aria-label="Phone number"
+                  aria-describedby="phone-hint"
                   onKeyDown={(e) => e.key === "Enter" && sendOtp()}
                 />
               </div>
@@ -292,7 +308,7 @@ export default function LoginPage() {
                 {loading ? "Sending…" : "Send OTP →"}
               </button>
 
-              <p style={{ textAlign: "center", fontSize: "0.73rem", color: "var(--text-muted)", marginTop: 18, lineHeight: 1.6 }}>
+              <p style={{ textAlign: "center", fontSize: "0.73rem", color: "var(--text-muted)", marginTop: 18, lineHeight: 1.6 }} id="phone-hint">
                 Enter any phone number. Use code <strong style={{ color: "var(--green)" }}>123456</strong> to verify.
               </p>
             </motion.div>
@@ -308,15 +324,24 @@ export default function LoginPage() {
               </p>
 
               {/* 6 boxes */}
-              <div style={{ display: "flex", gap: 9, justifyContent: "center", marginBottom: 22 }} onPaste={onOtpPaste}>
+              <div
+                role="group"
+                aria-label="6-digit verification code"
+                aria-describedby="otp-hint"
+                style={{ display: "flex", gap: 9, justifyContent: "center", marginBottom: 22 }}
+                onPaste={onOtpPaste}
+              >
                 {otp.map((d, i) => (
                   <input
                     key={i}
                     ref={(el) => { otpRefs.current[i] = el; }}
+                    id={`otp-${i}`}
                     type="text" inputMode="numeric" maxLength={1} value={d}
                     onChange={(e) => onOtpChange(i, e.target.value)}
                     onKeyDown={(e) => onOtpKey(i, e)}
                     autoFocus={i === 0}
+                    aria-label={`Digit ${i + 1} of 6`}
+                    autoComplete={i === 0 ? "one-time-code" : "off"}
                     style={{
                       width: 50, height: 58, borderRadius: 10, textAlign: "center",
                       fontSize: "1.5rem", fontWeight: 700, color: "#fff",
@@ -327,6 +352,7 @@ export default function LoginPage() {
                   />
                 ))}
               </div>
+              <p id="otp-hint" style={{ display: "none" }}>Enter each digit of the 6-digit verification code</p>
 
               <ErrMsg msg={error} />
 
@@ -392,8 +418,8 @@ export default function LoginPage() {
                 </div>
 
                 <div style={{ marginBottom: 18 }}>
-                  <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 600, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 7 }}>Short Bio</label>
-                  <textarea className="input" rows={2} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="I care about the planet…" />
+                  <label htmlFor="setup-bio" style={{ display: "block", fontSize: "0.72rem", fontWeight: 600, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 7 }}>Short Bio</label>
+                  <textarea id="setup-bio" className="input" rows={2} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="I care about the planet…" />
                 </div>
 
                 {/* ─ Lifestyle ─ */}
@@ -431,21 +457,25 @@ export default function LoginPage() {
 
                 <div style={{ marginBottom: 18 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                    <label style={{ fontSize: "0.8125rem", color: "var(--text-dim)" }}>Weekly Sustainability Target</label>
-                    <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--green)" }}>{form.weeklyGoal}/100</span>
+                    <label htmlFor="weekly-goal" style={{ fontSize: "0.8125rem", color: "var(--text-dim)" }}>Weekly Sustainability Target</label>
+                    <span aria-hidden="true" style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--green)" }}>{form.weeklyGoal}/100</span>
                   </div>
-                  <input type="range" min={20} max={100} step={5} value={form.weeklyGoal}
+                  <input id="weekly-goal" type="range" min={20} max={100} step={5} value={form.weeklyGoal}
                     onChange={(e) => setForm({ ...form, weeklyGoal: +e.target.value })}
+                    aria-valuemin={20} aria-valuemax={100} aria-valuenow={form.weeklyGoal}
+                    aria-label={`Weekly sustainability target: ${form.weeklyGoal} out of 100`}
                     style={{ width: "100%", accentColor: "var(--green)" }} />
                 </div>
 
                 <div style={{ marginBottom: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                    <label style={{ fontSize: "0.8125rem", color: "var(--text-dim)" }}>Weekly Carbon Budget</label>
-                    <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--green)" }}>{form.carbonBudget} kg CO₂e</span>
+                    <label htmlFor="carbon-budget" style={{ fontSize: "0.8125rem", color: "var(--text-dim)" }}>Weekly Carbon Budget</label>
+                    <span aria-hidden="true" style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--green)" }}>{form.carbonBudget} kg CO₂e</span>
                   </div>
-                  <input type="range" min={5} max={100} step={5} value={form.carbonBudget}
+                  <input id="carbon-budget" type="range" min={5} max={100} step={5} value={form.carbonBudget}
                     onChange={(e) => setForm({ ...form, carbonBudget: +e.target.value })}
+                    aria-valuemin={5} aria-valuemax={100} aria-valuenow={form.carbonBudget}
+                    aria-label={`Weekly carbon budget: ${form.carbonBudget} kg CO₂e`}
                     style={{ width: "100%", accentColor: "var(--green)" }} />
                 </div>
               </div>
