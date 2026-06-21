@@ -72,10 +72,10 @@ export const useUserStore = create<UserState>()(
       phone:           "",
       profile:         null,
 
-      setPhone: (phone: string): void =>
+      setPhone: (phone: string) =>
         set({ phone: sanitise(phone, 20) }),
 
-      completeOtp: (phone: string): void =>
+      completeOtp: (phone: string) =>
         set((state) => ({
           isLoggedIn:      true,
           phone:           sanitise(phone, 20),
@@ -83,7 +83,7 @@ export const useUserStore = create<UserState>()(
           profileComplete: state.profile?.phone === phone ? state.profileComplete : false,
         })),
 
-      setProfile: (profile: UserProfile): void =>
+      setProfile: (profile: UserProfile) =>
         set({
           profile:         sanitiseProfile(profile),
           profileComplete: true,
@@ -91,14 +91,14 @@ export const useUserStore = create<UserState>()(
           phone:           sanitise(profile.phone, 20),
         }),
 
-      updateProfile: (partial: Partial<UserProfile>): void =>
+      updateProfile: (partial: Partial<UserProfile>) =>
         set((state) => {
           if (!state.profile) return {};
           const merged = { ...state.profile, ...partial };
           return { profile: sanitiseProfile(merged) };
         }),
 
-      logout: (): void =>
+      logout: () =>
         set({
           isLoggedIn:      false,
           profileComplete: false,
